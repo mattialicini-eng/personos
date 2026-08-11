@@ -35,3 +35,7 @@ next-env.d.ts
 
 # data
 /data/personalos.json
+
+# environment
+.env.local
+.env*.local
