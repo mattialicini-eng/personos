@@ -16,6 +16,18 @@ CREATE TABLE IF NOT EXISTS profile (
   CHECK (id = 1)
 );
 
+-- People table (create before tasks since tasks references it)
+CREATE TABLE IF NOT EXISTS people (
+  id BIGSERIAL PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  organization TEXT,
+  type TEXT,
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Captures table (raw captures from all sources)
 CREATE TABLE IF NOT EXISTS captures (
   id BIGSERIAL PRIMARY KEY,
@@ -29,7 +41,7 @@ CREATE TABLE IF NOT EXISTS captures (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Tasks table
+-- Tasks table (now people table exists)
 CREATE TABLE IF NOT EXISTS tasks (
   id BIGSERIAL PRIMARY KEY,
   user_id TEXT NOT NULL,
@@ -38,20 +50,8 @@ CREATE TABLE IF NOT EXISTS tasks (
   priority INT DEFAULT 5,
   tags TEXT[],
   due_date DATE,
-  person_id BIGINT REFERENCES people(id),
+  person_id BIGINT REFERENCES people(id) ON DELETE SET NULL,
   status TEXT DEFAULT 'open',
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
--- People table
-CREATE TABLE IF NOT EXISTS people (
-  id BIGSERIAL PRIMARY KEY,
-  user_id TEXT NOT NULL,
-  name TEXT NOT NULL,
-  organization TEXT,
-  type TEXT,
-  metadata JSONB DEFAULT '{}',
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -124,7 +124,6 @@ RETURNS TABLE (
     memory.source,
     1 - (memory.embedding <=> query_embedding) AS similarity
   FROM memory
-  WHERE memory.user_id = auth.uid()::text
   ORDER BY memory.embedding <=> query_embedding
   LIMIT match_count;
 $$;
