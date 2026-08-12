@@ -25,6 +25,39 @@ export default function HomeTab({ data }) {
         )}
       </div>
 
+      <div className="card" style={{ gridColumn: 'span 2' }}>
+        <h2>📅 Prossimi Eventi</h2>
+        {data.calendar && data.calendar.length > 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1rem' }}>
+            {data.calendar.map((event, i) => {
+              const startTime = new Date(event.start_time)
+              const timeStr = startTime.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
+              const dateStr = startTime.toLocaleDateString('it-IT', { month: 'short', day: 'numeric' })
+              return (
+                <div key={i} style={{
+                  padding: '0.75rem',
+                  background: 'var(--bg-light)',
+                  borderRadius: '0.375rem',
+                  borderLeft: '3px solid var(--primary)'
+                }}>
+                  <div style={{ fontWeight: '600', fontSize: '0.95rem' }}>{event.title}</div>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-light)', marginTop: '0.25rem' }}>
+                    {dateStr} · {timeStr}
+                  </div>
+                  {event.attendees && event.attendees.length > 0 && (
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-light)', marginTop: '0.25rem' }}>
+                      👥 {event.attendees.length} partecipanti
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        ) : (
+          <div style={{ color: 'var(--text-light)', fontSize: '0.875rem', marginTop: '1rem' }}>Nessun evento in calendario</div>
+        )}
+      </div>
+
       <div className="card">
         <h2>📅 Settimana</h2>
         <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>

@@ -4,7 +4,8 @@ import {
   getTasks,
   getPeople,
   getDailyLogs,
-  getCaptures
+  getCaptures,
+  getCalendarEvents
 } from '@/lib/store'
 
 export async function GET(request) {
@@ -22,6 +23,7 @@ export async function GET(request) {
     if (type === 'all' || type === 'home') {
       data.tasks = await getTasks()
       data.people = await getPeople()
+      data.calendar = await getCalendarEvents(5)
 
       // Get today's log
       const today = new Date().toISOString().split('T')[0]
