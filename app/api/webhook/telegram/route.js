@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createCapture } from '@/lib/store'
+import { createCapture, createTask, getProfile, getTasks } from '@/lib/store'
 import OpenAI from 'openai'
 import https from 'https'
 
@@ -76,7 +76,64 @@ export async function POST(request) {
 
     const message = update.message
     const chatId = message.chat.id
+    const userId = process.env.USER_ID || 'default-user'
     let captureText = null
+
+    // Handle commands
+    if (message.text?.startsWith('/')) {
+      const [command, ...args] = message.text.split(' ')
+
+      if (command === '/task') {
+        const title = args.join(' ')
+        if (!title) {
+          await sendMessage(chatId, '❌ Uso: /task <titolo>')
+          return NextResponse.json({ ok: true })
+        }
+        const task = await createTask({
+          user_id: userId,
+          title,
+          urgency: 'normal',
+          priority: 'medium',
+          tags: ['telegram']
+        })
+        if (task) {
+          await sendMessage(chatId, `✅ Task creato: "${title}"`)
+        } else {
+          await sendMessage(chatId, '❌ Errore nel salvataggio del task')
+        }
+        return NextResponse.json({ ok: true })
+      }
+
+      if (command === '/status') {
+        const profile = await getProfile(userId)
+        const tasks = await getTasks(userId)
+        const activeTasks = tasks.filter(t => t.status !== 'completed')
+
+        const status = `📊 Status PersonOS\n\n` +
+          `🎯 Focus: ${profile?.focus || '-'}\n` +
+          `📋 Task attivi: ${activeTasks.length}\n` +
+          `✅ Task completati: ${tasks.filter(t => t.status === 'completed').length}\n` +
+          `📍 Città: ${profile?.city || '-'}`
+
+        await sendMessage(chatId, status)
+        return NextResponse.json({ ok: true })
+      }
+
+      if (command === '/help') {
+        const help = `🤖 PersonOS Telegram Bot\n\n` +
+          `Comandi disponibili:\n` +
+          `/task <titolo> - Crea nuovo task\n` +
+          `/status - Mostra focus e task\n` +
+          `/help - Mostra questo messaggio\n\n` +
+          `Invia testo o voce per catturare note`
+
+        await sendMessage(chatId, help)
+        return NextResponse.json({ ok: true })
+      }
+
+      await sendMessage(chatId, '❓ Comando non riconosciuto. Usa /help per i comandi')
+      return NextResponse.json({ ok: true })
+    }
 
     // Handle text message
     if (message.text) {
@@ -97,7 +154,7 @@ export async function POST(request) {
 
     // Save capture
     const capture = await createCapture({
-      user_id: process.env.USER_ID || 'default-user',
+      user_id: userId,
       text: captureText,
       source: 'telegram',
       classification: null,
