@@ -12,24 +12,37 @@ const TELEGRAM_API = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}`
 
 async function downloadFile(fileId) {
   try {
+    console.log(`[TELEGRAM] Downloading file: ${fileId}`)
     const fileInfoResponse = await fetch(`${TELEGRAM_API}/getFile?file_id=${fileId}`)
     const fileInfo = await fileInfoResponse.json()
 
-    if (!fileInfo.ok) return null
+    if (!fileInfo.ok) {
+      console.error('[TELEGRAM] getFile failed:', fileInfo)
+      return null
+    }
 
     const filePath = fileInfo.result.file_path
     const fileUrl = `https://api.telegram.org/file/bot${TELEGRAM_BOT_TOKEN}/${filePath}`
+    console.log(`[TELEGRAM] File URL: ${fileUrl}`)
 
     const response = await fetch(fileUrl)
-    return await response.buffer()
+    if (!response.ok) {
+      console.error('[TELEGRAM] Download failed:', response.status)
+      return null
+    }
+
+    const buffer = await response.arrayBuffer()
+    console.log(`[TELEGRAM] Downloaded ${buffer.byteLength} bytes`)
+    return Buffer.from(buffer)
   } catch (error) {
-    console.error('Download error:', error)
+    console.error('[TELEGRAM] Download error:', error)
     return null
   }
 }
 
 async function transcribeAudio(audioBuffer) {
   try {
+    console.log(`[WHISPER] Starting transcription of ${audioBuffer.length} bytes`)
     const formData = new FormData()
     formData.append('file', new Blob([audioBuffer], { type: 'audio/ogg' }), 'audio.ogg')
     formData.append('model', 'whisper-1')
@@ -44,9 +57,17 @@ async function transcribeAudio(audioBuffer) {
     })
 
     const data = await response.json()
+    console.log(`[WHISPER] Response:`, data)
+
+    if (!response.ok) {
+      console.error('[WHISPER] API error:', data)
+      return null
+    }
+
+    console.log(`[WHISPER] Transcribed: "${data.text}"`)
     return data.text || null
   } catch (error) {
-    console.error('Transcription error:', error)
+    console.error('[WHISPER] Transcription error:', error)
     return null
   }
 }
