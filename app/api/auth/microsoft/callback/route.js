@@ -21,7 +21,8 @@ export async function GET(request) {
     }
 
     // Exchange code for tokens
-    const tokenUrl = 'https://login.microsoftonline.com/common/oauth2/v2.0/token'
+    const tenantId = process.env.MICROSOFT_TENANT_ID || 'common'
+    const tokenUrl = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`
     const tokenResponse = await fetch(tokenUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },

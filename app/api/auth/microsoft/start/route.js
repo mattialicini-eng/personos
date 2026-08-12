@@ -6,7 +6,8 @@ export async function GET(request) {
     const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/microsoft/callback`
     const scope = 'Calendars.Read Mail.Read offline_access'
 
-    const authUrl = new URL('https://login.microsoftonline.com/common/oauth2/v2.0/authorize')
+    const tenantId = process.env.MICROSOFT_TENANT_ID || 'common'
+    const authUrl = new URL(`https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize`)
     authUrl.searchParams.append('client_id', clientId)
     authUrl.searchParams.append('redirect_uri', redirectUri)
     authUrl.searchParams.append('response_type', 'code')
