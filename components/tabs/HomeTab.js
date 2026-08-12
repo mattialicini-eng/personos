@@ -1,4 +1,39 @@
+import { useEffect, useState } from 'react'
+
 export default function HomeTab({ data }) {
+  const [meals, setMeals] = useState([])
+  const [summary, setSummary] = useState({ good: 0, bad: 0 })
+
+  useEffect(() => {
+    loadMeals()
+  }, [])
+
+  const loadMeals = async () => {
+    try {
+      const res = await fetch('/api/meals')
+      const result = await res.json()
+      if (result.ok) {
+        setMeals(result.meals)
+        setSummary(result.summary)
+      }
+    } catch (err) {
+      console.error('Load meals error:', err)
+    }
+  }
+
+  const handleMealStatus = async (mealType, status) => {
+    try {
+      await fetch('/api/meals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mealType, status })
+      })
+      loadMeals()
+    } catch (err) {
+      console.error('Save meal error:', err)
+    }
+  }
+
   if (!data?.profile) {
     return <div>No data</div>
   }
@@ -68,13 +103,60 @@ export default function HomeTab({ data }) {
 
       <div className="card">
         <h2>🍽️ Nutrizione</h2>
-        <div className="stat">
-          <span>Calorie oggi</span>
-          <span className="stat-value">1840/2000</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+          {meals.map(meal => (
+            <div key={meal.type} style={{
+              padding: '0.75rem',
+              background: 'var(--bg-light)',
+              borderRadius: '0.375rem'
+            }}>
+              <div style={{ fontWeight: '600', marginBottom: '0.5rem' }}>{meal.label}</div>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  onClick={() => handleMealStatus(meal.type, 'good')}
+                  style={{
+                    flex: 1,
+                    padding: '0.5rem',
+                    background: meal.status === 'good' ? 'var(--success)' : 'var(--bg-light)',
+                    color: meal.status === 'good' ? 'white' : 'inherit',
+                    border: 'none',
+                    borderRadius: '0.25rem',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                    fontWeight: '600'
+                  }}
+                >
+                  ✅ Good
+                </button>
+                <button
+                  onClick={() => handleMealStatus(meal.type, 'bad')}
+                  style={{
+                    flex: 1,
+                    padding: '0.5rem',
+                    background: meal.status === 'bad' ? 'var(--danger)' : 'var(--bg-light)',
+                    color: meal.status === 'bad' ? 'white' : 'inherit',
+                    border: 'none',
+                    borderRadius: '0.25rem',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                    fontWeight: '600'
+                  }}
+                >
+                  ❌ Bad
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
-        <div className="stat">
-          <span>Acqua</span>
-          <span className="stat-value">7/8</span>
+        <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
+          <div className="stat">
+            <span>Pasti Good</span>
+            <span style={{ color: 'var(--success)', fontWeight: '600' }}>{summary.good}</span>
+          </div>
+          <div className="stat">
+            <span>Pasti Bad</span>
+            <span style={{ color: 'var(--danger)', fontWeight: '600' }}>{summary.bad}</span>
+          </div>
         </div>
       </div>
 
