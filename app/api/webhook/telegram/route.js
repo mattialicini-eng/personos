@@ -160,10 +160,53 @@ export async function POST(request) {
         return NextResponse.json({ ok: true })
       }
 
+      if (command === '/addtodo') {
+        const title = args.join(' ')
+        if (!title) {
+          await sendMessage(chatId, '❌ Uso: /addtodo <titolo>')
+          return NextResponse.json({ ok: true })
+        }
+
+        try {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/todo`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, source: 'telegram' })
+          })
+          const data = await res.json()
+          if (data.ok) {
+            await sendMessage(chatId, `✅ Task aggiunto: "${title}"`)
+          } else {
+            await sendMessage(chatId, '❌ Errore nel salvataggio')
+          }
+        } catch (err) {
+          await sendMessage(chatId, '❌ Errore: ' + err.message)
+        }
+        return NextResponse.json({ ok: true })
+      }
+
+      if (command === '/todolist') {
+        try {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/todo?status=pending`)
+          const data = await res.json()
+          if (data.ok && data.todo.length > 0) {
+            const list = data.todo.map((t, i) => `${i + 1}. ${t.title}`).join('\n')
+            await sendMessage(chatId, `✓ To Do List:\n\n${list}`)
+          } else {
+            await sendMessage(chatId, '✨ Nessun task in lista!')
+          }
+        } catch (err) {
+          await sendMessage(chatId, '❌ Errore: ' + err.message)
+        }
+        return NextResponse.json({ ok: true })
+      }
+
       if (command === '/help') {
         const help = `🤖 PersonOS Telegram Bot\n\n` +
           `Comandi disponibili:\n` +
           `/task <titolo> - Crea nuovo task\n` +
+          `/addtodo <titolo> - Aggiungi to do\n` +
+          `/todolist - Mostra to do list\n` +
           `/addfocus <titolo> - Aggiungi focus\n` +
           `/focuslist - Mostra focus attivi\n` +
           `/status - Mostra focus e task\n` +

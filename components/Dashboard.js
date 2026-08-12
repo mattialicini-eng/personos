@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useData } from '@/lib/hooks'
 import CaptureBar from './CaptureBar'
 import FocusManager from './FocusManager'
+import TodoManager from './TodoManager'
 import HomeTab from './tabs/HomeTab'
 import CrmTab from './tabs/CrmTab'
 import FinanceTab from './tabs/FinanceTab'
@@ -16,6 +17,7 @@ export default function Dashboard() {
 
   const tabs = [
     { id: 'home', label: 'Home' },
+    { id: 'todo', label: 'To Do' },
     { id: 'crm', label: 'CRM' },
     { id: 'finance', label: 'Finanze' },
     { id: 'review', label: 'Review' },
@@ -55,6 +57,7 @@ export default function Dashboard() {
       {!loading && data && (
         <div className="grid">
           {activeTab === 'home' && <HomeTab data={data} />}
+          {activeTab === 'todo' && <div className="card" style={{ gridColumn: 'span 2' }}><TodoManager /></div>}
           {activeTab === 'crm' && <CrmTab data={data} />}
           {activeTab === 'finance' && <FinanceTab data={data} />}
           {activeTab === 'review' && <ReviewTab data={data} />}

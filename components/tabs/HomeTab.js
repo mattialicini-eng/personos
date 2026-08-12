@@ -10,22 +10,6 @@ export default function HomeTab({ data }) {
   return (
     <>
       <div className="card" style={{ gridColumn: 'span 2' }}>
-        <h2>🎯 Focus Oggi</h2>
-        <p style={{ fontSize: '1.125rem', marginBottom: '1rem' }}>{profile.focus || 'Nessun focus'}</p>
-        <h3>Abitudini</h3>
-        {profile.habits && profile.habits.length > 0 ? (
-          profile.habits.map((habit, i) => (
-            <div key={i} className="habit-item">
-              <span>{habit}</span>
-              <span style={{ fontWeight: '600', color: 'var(--text-light)' }}>-</span>
-            </div>
-          ))
-        ) : (
-          <div style={{ color: 'var(--text-light)', fontSize: '0.875rem' }}>Nessuna abitudine configurata</div>
-        )}
-      </div>
-
-      <div className="card" style={{ gridColumn: 'span 2' }}>
         <h2>📅 Prossimi Eventi</h2>
         {data.calendar && data.calendar.length > 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1rem' }}>
