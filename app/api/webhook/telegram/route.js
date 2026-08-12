@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { createCapture, createTask, getProfile, getTasks } from '@/lib/store'
 import OpenAI from 'openai'
 import https from 'https'
+import FormData from 'form-data'
+import { Readable } from 'stream'
 
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
@@ -43,17 +45,18 @@ async function downloadFile(fileId) {
 async function transcribeAudio(audioBuffer) {
   try {
     console.log(`[WHISPER] Starting transcription of ${audioBuffer.length} bytes`)
-    const formData = new FormData()
-    formData.append('file', new Blob([audioBuffer], { type: 'audio/ogg' }), 'audio.ogg')
-    formData.append('model', 'whisper-1')
-    formData.append('language', 'it')
+    const form = new FormData()
+    form.append('file', Readable.from(audioBuffer), { filename: 'audio.ogg', contentType: 'audio/ogg' })
+    form.append('model', 'whisper-1')
+    form.append('language', 'it')
 
     const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        ...form.getHeaders()
       },
-      body: formData
+      body: form
     })
 
     const data = await response.json()
