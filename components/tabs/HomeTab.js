@@ -3,9 +3,12 @@ import { useEffect, useState } from 'react'
 export default function HomeTab({ data }) {
   const [meals, setMeals] = useState([])
   const [summary, setSummary] = useState({ good: 0, bad: 0 })
+  const [weekDays, setWeekDays] = useState([])
+  const [fitnessSummary, setFitnessSummary] = useState({ workouts: 0, runs: 0 })
 
   useEffect(() => {
     loadMeals()
+    loadFitness()
   }, [])
 
   const loadMeals = async () => {
@@ -14,10 +17,23 @@ export default function HomeTab({ data }) {
       const result = await res.json()
       if (result.ok) {
         setMeals(result.meals)
-        setSummary(result.summary)
+        setSummary(result.monthlySummary)
       }
     } catch (err) {
       console.error('Load meals error:', err)
+    }
+  }
+
+  const loadFitness = async () => {
+    try {
+      const res = await fetch('/api/fitness')
+      const result = await res.json()
+      if (result.ok) {
+        setWeekDays(result.weekDays)
+        setFitnessSummary(result.monthlySummary)
+      }
+    } catch (err) {
+      console.error('Load fitness error:', err)
     }
   }
 
@@ -31,6 +47,19 @@ export default function HomeTab({ data }) {
       loadMeals()
     } catch (err) {
       console.error('Save meal error:', err)
+    }
+  }
+
+  const handleActivity = async (date, type) => {
+    try {
+      await fetch('/api/fitness', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date, type })
+      })
+      loadFitness()
+    } catch (err) {
+      console.error('Save activity error:', err)
     }
   }
 
@@ -149,6 +178,7 @@ export default function HomeTab({ data }) {
           ))}
         </div>
         <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-light)', marginBottom: '0.75rem' }}>Ultimi 30 giorni</div>
           <div className="stat">
             <span>Pasti Good</span>
             <span style={{ color: 'var(--success)', fontWeight: '600' }}>{summary.good}</span>
@@ -161,11 +191,74 @@ export default function HomeTab({ data }) {
       </div>
 
       <div className="card">
-        <h2>📊 Fitness (ultimi 30gg)</h2>
-        <div className="chart-container">
-          {[60, 75, 45, 80, 55, 70, 65].map((height, i) => (
-            <div key={i} className="bar" style={{ height: `${height}%` }} />
+        <h2>📊 Fitness</h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+          {weekDays.map(day => (
+            <div key={day.date} style={{
+              padding: '0.75rem',
+              background: 'var(--bg-light)',
+              borderRadius: '0.375rem'
+            }}>
+              <div style={{ fontWeight: '600', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+                {day.dayName} {day.dayNum}
+              </div>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button
+                  onClick={() => handleActivity(day.date, 'workout')}
+                  style={{
+                    flex: 1,
+                    padding: '0.5rem',
+                    background: day.activities.includes('workout') ? 'var(--primary)' : 'var(--bg-light)',
+                    color: day.activities.includes('workout') ? 'white' : 'inherit',
+                    border: 'none',
+                    borderRadius: '0.25rem',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                    fontWeight: '600'
+                  }}
+                >
+                  💪 Workout
+                </button>
+                <button
+                  onClick={() => handleActivity(day.date, 'corsa')}
+                  style={{
+                    flex: 1,
+                    padding: '0.5rem',
+                    background: day.activities.includes('corsa') ? 'var(--accent)' : 'var(--bg-light)',
+                    color: day.activities.includes('corsa') ? 'white' : 'inherit',
+                    border: 'none',
+                    borderRadius: '0.25rem',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                    fontWeight: '600'
+                  }}
+                >
+                  🏃 Corsa
+                </button>
+              </div>
+            </div>
           ))}
+        </div>
+        <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-light)', marginBottom: '0.75rem' }}>Ultimi 30 giorni (target: 3 workout + 2 corse/settimana)</div>
+          <div className="stat">
+            <span>Workout</span>
+            <span style={{
+              fontWeight: '600',
+              color: fitnessSummary.workouts >= 12 ? 'var(--success)' : 'var(--danger)'
+            }}>
+              {fitnessSummary.workouts} {fitnessSummary.workouts >= 12 ? '✅' : '❌'}
+            </span>
+          </div>
+          <div className="stat">
+            <span>Corse</span>
+            <span style={{
+              fontWeight: '600',
+              color: fitnessSummary.runs >= 8 ? 'var(--success)' : 'var(--danger)'
+            }}>
+              {fitnessSummary.runs} {fitnessSummary.runs >= 8 ? '✅' : '❌'}
+            </span>
+          </div>
         </div>
       </div>
 

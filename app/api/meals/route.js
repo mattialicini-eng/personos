@@ -9,6 +9,7 @@ const supabase = createClient(
 export async function GET(request) {
   const userId = process.env.USER_ID || 'default-user'
   const today = new Date().toISOString().split('T')[0]
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
 
   const meals = [
     { type: 'colazione', label: '🌅 Colazione' },
@@ -17,17 +18,18 @@ export async function GET(request) {
   ]
 
   try {
-    const { data, error } = await supabase
+    // Today's meals
+    const { data: todayData, error: todayError } = await supabase
       .from('meals')
       .select('*')
       .eq('user_id', userId)
       .eq('date', today)
       .order('meal_type', { ascending: true })
 
-    if (error) throw error
+    if (todayError) throw todayError
 
     const mealData = meals.map(m => {
-      const existing = data?.find(d => d.meal_type === m.type)
+      const existing = todayData?.find(d => d.meal_type === m.type)
       return {
         type: m.type,
         label: m.label,
@@ -35,17 +37,26 @@ export async function GET(request) {
       }
     })
 
-    const good = data?.filter(d => d.status === 'good').length || 0
-    const bad = data?.filter(d => d.status === 'bad').length || 0
+    // Last 30 days summary
+    const { data: monthlyData, error: monthlyError } = await supabase
+      .from('meals')
+      .select('*')
+      .eq('user_id', userId)
+      .gte('date', thirtyDaysAgo)
+      .lte('date', today)
+
+    if (monthlyError) throw monthlyError
+
+    const monthlyGood = monthlyData?.filter(d => d.status === 'good').length || 0
+    const monthlyBad = monthlyData?.filter(d => d.status === 'bad').length || 0
 
     return NextResponse.json({
       ok: true,
       meals: mealData,
-      summary: { good, bad }
+      monthlySummary: { good: monthlyGood, bad: monthlyBad }
     })
   } catch (error) {
     console.error('Meals fetch error:', error)
-    // Fallback: return empty meals structure
     const mealData = meals.map(m => ({
       type: m.type,
       label: m.label,
@@ -54,7 +65,7 @@ export async function GET(request) {
     return NextResponse.json({
       ok: true,
       meals: mealData,
-      summary: { good: 0, bad: 0 }
+      monthlySummary: { good: 0, bad: 0 }
     })
   }
 }
