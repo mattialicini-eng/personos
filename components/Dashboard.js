@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useData } from '@/lib/hooks'
 import CaptureBar from './CaptureBar'
+import FocusManager from './FocusManager'
 import HomeTab from './tabs/HomeTab'
 import CrmTab from './tabs/CrmTab'
 import FinanceTab from './tabs/FinanceTab'
@@ -24,6 +25,9 @@ export default function Dashboard() {
   return (
     <div className="content">
       <CaptureBar />
+      <div className="grid">
+        <FocusManager />
+      </div>
       <div className="tabs">
         {tabs.map(tab => (
           <button

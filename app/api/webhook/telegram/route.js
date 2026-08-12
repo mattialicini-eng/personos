@@ -119,10 +119,53 @@ export async function POST(request) {
         return NextResponse.json({ ok: true })
       }
 
+      if (command === '/addfocus') {
+        const title = args.join(' ')
+        if (!title) {
+          await sendMessage(chatId, '❌ Uso: /addfocus <titolo>')
+          return NextResponse.json({ ok: true })
+        }
+
+        try {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/focus`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, priority: 1 })
+          })
+          const data = await res.json()
+          if (data.ok) {
+            await sendMessage(chatId, `✅ Focus aggiunto: "${title}"`)
+          } else {
+            await sendMessage(chatId, '❌ Errore nel salvataggio')
+          }
+        } catch (err) {
+          await sendMessage(chatId, '❌ Errore: ' + err.message)
+        }
+        return NextResponse.json({ ok: true })
+      }
+
+      if (command === '/focuslist') {
+        try {
+          const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/focus?status=active`)
+          const data = await res.json()
+          if (data.ok && data.focus.length > 0) {
+            const list = data.focus.map(f => `• ${f.title}`).join('\n')
+            await sendMessage(chatId, `🎯 Focus attivi:\n\n${list}`)
+          } else {
+            await sendMessage(chatId, '📭 Nessun focus attivo')
+          }
+        } catch (err) {
+          await sendMessage(chatId, '❌ Errore: ' + err.message)
+        }
+        return NextResponse.json({ ok: true })
+      }
+
       if (command === '/help') {
         const help = `🤖 PersonOS Telegram Bot\n\n` +
           `Comandi disponibili:\n` +
           `/task <titolo> - Crea nuovo task\n` +
+          `/addfocus <titolo> - Aggiungi focus\n` +
+          `/focuslist - Mostra focus attivi\n` +
           `/status - Mostra focus e task\n` +
           `/help - Mostra questo messaggio\n\n` +
           `Invia testo o voce per catturare note`

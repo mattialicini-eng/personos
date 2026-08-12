@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 
 const publicRoutes = ['/login', '/api/login', '/api/init']
-const oauthRoutes = ['/api/auth/microsoft/start', '/api/auth/microsoft/callback', '/api/calendar/sync']
+const oauthRoutes = ['/api/auth/microsoft/start', '/api/auth/microsoft/callback', '/api/calendar/sync', '/api/focus']
 const webhookRoutes = ['/api/webhook']
 
 export function middleware(request) {
