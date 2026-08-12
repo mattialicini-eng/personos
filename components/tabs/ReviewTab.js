@@ -1,4 +1,4 @@
-export default function ReviewTab() {
+export default function ReviewTab({ data }) {
   return (
     <>
       <div className="card" style={{ gridColumn: 'span 2' }}>

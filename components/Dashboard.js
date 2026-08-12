@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useData } from '@/lib/hooks'
 import CaptureBar from './CaptureBar'
 import HomeTab from './tabs/HomeTab'
 import CrmTab from './tabs/CrmTab'
@@ -9,6 +10,7 @@ import ReviewTab from './tabs/ReviewTab'
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('home')
+  const { data, loading, error } = useData('all')
 
   const tabs = [
     { id: 'home', label: 'Home' },
@@ -32,12 +34,26 @@ export default function Dashboard() {
         ))}
       </div>
 
-      <div className="grid">
-        {activeTab === 'home' && <HomeTab />}
-        {activeTab === 'crm' && <CrmTab />}
-        {activeTab === 'finance' && <FinanceTab />}
-        {activeTab === 'review' && <ReviewTab />}
-      </div>
+      {loading && (
+        <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-light)' }}>
+          Caricamento dati...
+        </div>
+      )}
+
+      {error && (
+        <div style={{ padding: '2rem', color: 'var(--danger)', textAlign: 'center' }}>
+          Errore: {error}
+        </div>
+      )}
+
+      {!loading && data && (
+        <div className="grid">
+          {activeTab === 'home' && <HomeTab data={data} />}
+          {activeTab === 'crm' && <CrmTab data={data} />}
+          {activeTab === 'finance' && <FinanceTab data={data} />}
+          {activeTab === 'review' && <ReviewTab data={data} />}
+        </div>
+      )}
     </div>
   )
 }

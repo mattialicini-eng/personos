@@ -1,22 +1,28 @@
-export default function HomeTab() {
+export default function HomeTab({ data }) {
+  if (!data?.profile) {
+    return <div>No data</div>
+  }
+
+  const profile = data.profile
+  const tasks = data.tasks || []
+  const today = data.today || {}
+
   return (
     <>
       <div className="card" style={{ gridColumn: 'span 2' }}>
         <h2>🎯 Focus Oggi</h2>
-        <p style={{ fontSize: '1.125rem', marginBottom: '1rem' }}>Completare milestone VitaOS Q3</p>
+        <p style={{ fontSize: '1.125rem', marginBottom: '1rem' }}>{profile.focus || 'Nessun focus'}</p>
         <h3>Abitudini</h3>
-        <div className="habit-item">
-          <span>Meditazione mattina</span>
-          <span style={{ fontWeight: '600', color: 'var(--success)' }}>✓ 24/30</span>
-        </div>
-        <div className="habit-item">
-          <span>Esercizio fisico</span>
-          <span style={{ fontWeight: '600', color: 'var(--warning)' }}>⊘ 12/30</span>
-        </div>
-        <div className="habit-item">
-          <span>Lettura sera</span>
-          <span style={{ fontWeight: '600', color: 'var(--success)' }}>✓ 20/30</span>
-        </div>
+        {profile.habits && profile.habits.length > 0 ? (
+          profile.habits.map((habit, i) => (
+            <div key={i} className="habit-item">
+              <span>{habit}</span>
+              <span style={{ fontWeight: '600', color: 'var(--text-light)' }}>-</span>
+            </div>
+          ))
+        ) : (
+          <div style={{ color: 'var(--text-light)', fontSize: '0.875rem' }}>Nessuna abitudine configurata</div>
+        )}
       </div>
 
       <div className="card">

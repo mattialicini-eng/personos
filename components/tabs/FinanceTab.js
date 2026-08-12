@@ -1,4 +1,4 @@
-export default function FinanceTab() {
+export default function FinanceTab({ data }) {
   return (
     <>
       <div className="card">

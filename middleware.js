@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 
-const publicRoutes = ['/login', '/api/login']
+const publicRoutes = ['/login', '/api/login', '/api/init']
 const webhookRoutes = ['/api/webhook']
 
 export function middleware(request) {
