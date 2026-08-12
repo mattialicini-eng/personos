@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createCapture, createTask, getProfile, getTasks } from '@/lib/store'
 import OpenAI from 'openai'
-import https from 'https'
-import FormData from 'form-data'
-import { Readable } from 'stream'
 
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
@@ -45,30 +42,19 @@ async function downloadFile(fileId) {
 async function transcribeAudio(audioBuffer) {
   try {
     console.log(`[WHISPER] Starting transcription of ${audioBuffer.length} bytes`)
-    const form = new FormData()
-    form.append('file', Readable.from(audioBuffer), { filename: 'audio.ogg', contentType: 'audio/ogg' })
-    form.append('model', 'whisper-1')
-    form.append('language', 'it')
 
-    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-        ...form.getHeaders()
-      },
-      body: form
+    const blob = new Blob([audioBuffer], { type: 'audio/ogg' })
+    blob.name = 'audio.ogg'
+
+    const response = await client.audio.transcriptions.create({
+      file: blob,
+      model: 'whisper-1',
+      language: 'it'
     })
 
-    const data = await response.json()
-    console.log(`[WHISPER] Response:`, data)
-
-    if (!response.ok) {
-      console.error('[WHISPER] API error:', data)
-      return null
-    }
-
-    console.log(`[WHISPER] Transcribed: "${data.text}"`)
-    return data.text || null
+    console.log(`[WHISPER] Response:`, response)
+    console.log(`[WHISPER] Transcribed: "${response.text}"`)
+    return response.text || null
   } catch (error) {
     console.error('[WHISPER] Transcription error:', error)
     return null
