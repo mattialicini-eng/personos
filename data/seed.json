@@ -2,13 +2,15 @@
   "profile": {
     "name": "Mattia",
     "email": "m.licini@sikuro.eu",
-    "role": "Founder @ Sikuro",
-    "city": "Milano",
-    "focus": "Completare milestone VitaOS Q3",
+    "role": "COO c/o Sikuro",
+    "city": "Alzano Lombardo",
+    "focus": "Balance lavoro, crescita personale e fitness",
     "habits": [
-      "Meditazione mattina",
-      "Esercizio fisico",
-      "Lettura sera"
+      "Lettura serale",
+      "Studio inglese 3x/week",
+      "Mangiare pulito",
+      "Allenamento palestra 3x/week",
+      "Corse 2x/week"
     ],
     "calorieGoal": 2000
   },
