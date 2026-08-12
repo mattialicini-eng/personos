@@ -16,7 +16,13 @@ export async function GET(request) {
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
 
-    if (error) throw error
+    if (error) {
+      console.warn('Goals table might not exist yet:', error.message)
+      return NextResponse.json({
+        ok: true,
+        goals: []
+      })
+    }
 
     return NextResponse.json({
       ok: true,
