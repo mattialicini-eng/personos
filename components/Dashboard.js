@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import CaptureBar from './CaptureBar'
 import HomeTab from './tabs/HomeTab'
 import CrmTab from './tabs/CrmTab'
 import FinanceTab from './tabs/FinanceTab'
@@ -18,6 +19,7 @@ export default function Dashboard() {
 
   return (
     <div className="content">
+      <CaptureBar />
       <div className="tabs">
         {tabs.map(tab => (
           <button
