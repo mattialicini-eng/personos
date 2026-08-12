@@ -5,10 +5,14 @@ export default function HomeTab({ data }) {
   const [summary, setSummary] = useState({ good: 0, bad: 0 })
   const [weekDays, setWeekDays] = useState([])
   const [fitnessSummary, setFitnessSummary] = useState({ workouts: 0, runs: 0 })
+  const [goals, setGoals] = useState([])
+  const [newGoal, setNewGoal] = useState('')
+  const [newGoalDeadline, setNewGoalDeadline] = useState('')
 
   useEffect(() => {
     loadMeals()
     loadFitness()
+    loadGoals()
   }, [])
 
   const loadMeals = async () => {
@@ -63,6 +67,56 @@ export default function HomeTab({ data }) {
     }
   }
 
+  const loadGoals = async () => {
+    try {
+      const res = await fetch('/api/goals')
+      const result = await res.json()
+      if (result.ok) {
+        setGoals(result.goals)
+      }
+    } catch (err) {
+      console.error('Load goals error:', err)
+    }
+  }
+
+  const addGoal = async () => {
+    if (!newGoal.trim()) return
+    try {
+      await fetch('/api/goals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: newGoal, deadline: newGoalDeadline || null })
+      })
+      setNewGoal('')
+      setNewGoalDeadline('')
+      loadGoals()
+    } catch (err) {
+      console.error('Add goal error:', err)
+    }
+  }
+
+  const toggleGoal = async (goal) => {
+    try {
+      await fetch('/api/goals', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: goal.id, completed: !goal.completed, title: goal.title, deadline: goal.deadline })
+      })
+      loadGoals()
+    } catch (err) {
+      console.error('Update goal error:', err)
+    }
+  }
+
+  const deleteGoal = async (goalId) => {
+    try {
+      await fetch(`/api/goals?id=${goalId}`, { method: 'DELETE' })
+      loadGoals()
+    } catch (err) {
+      console.error('Delete goal error:', err)
+    }
+  }
+
   if (!data?.profile) {
     return <div>No data</div>
   }
@@ -104,30 +158,6 @@ export default function HomeTab({ data }) {
         ) : (
           <div style={{ color: 'var(--text-light)', fontSize: '0.875rem', marginTop: '1rem' }}>Nessun evento in calendario</div>
         )}
-      </div>
-
-      <div className="card">
-        <h2>📅 Settimana</h2>
-        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
-          {[8, 9, 10, 11, 12].map((day, i) => (
-            <div
-              key={day}
-              style={{
-                flex: 1,
-                textAlign: 'center',
-                padding: '0.5rem',
-                background: i === 1 ? 'var(--accent)' : 'var(--bg-light)',
-                color: i === 1 ? 'white' : 'inherit',
-                borderRadius: '0.5rem'
-              }}
-            >
-              <div style={{ fontSize: '0.875rem', color: i === 1 ? 'inherit' : 'var(--text-light)' }}>
-                {['Lun', 'Mar', 'Mer', 'Gio', 'Ven'][i]}
-              </div>
-              <div style={{ fontWeight: '600' }}>{day}</div>
-            </div>
-          ))}
-        </div>
       </div>
 
       <div className="card">
@@ -264,17 +294,109 @@ export default function HomeTab({ data }) {
 
       <div className="card">
         <h2>🎯 Obiettivi</h2>
-        <h3>Settimana</h3>
-        <div className="stat">
-          <span>Completare design V1</span>
-        </div>
-        <div className="stat">
-          <span>5 call commerciali</span>
-        </div>
-        <h3>Mese</h3>
-        <div className="stat">
-          <span>Revenue target</span>
-          <span style={{ color: 'var(--success)' }}>↑ 85%</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <input
+              type="text"
+              placeholder="Nuovo obiettivo..."
+              value={newGoal}
+              onChange={(e) => setNewGoal(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && addGoal()}
+              style={{
+                flex: 1,
+                padding: '0.5rem',
+                border: '1px solid var(--border)',
+                borderRadius: '0.25rem',
+                background: 'var(--bg-light)',
+                color: 'inherit',
+                minWidth: '150px'
+              }}
+            />
+            <input
+              type="date"
+              value={newGoalDeadline}
+              onChange={(e) => setNewGoalDeadline(e.target.value)}
+              style={{
+                padding: '0.5rem',
+                border: '1px solid var(--border)',
+                borderRadius: '0.25rem',
+                background: 'var(--bg-light)',
+                color: 'inherit'
+              }}
+            />
+            <button
+              onClick={addGoal}
+              style={{
+                padding: '0.5rem 1rem',
+                background: 'var(--primary)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '0.25rem',
+                cursor: 'pointer',
+                fontWeight: '600'
+              }}
+            >
+              +
+            </button>
+          </div>
+
+          {goals.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {goals.map(goal => (
+                <div
+                  key={goal.id}
+                  style={{
+                    padding: '0.75rem',
+                    background: 'var(--bg-light)',
+                    borderRadius: '0.375rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.75rem',
+                    opacity: goal.completed ? 0.6 : 1
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={goal.completed}
+                    onChange={() => toggleGoal(goal)}
+                    style={{ cursor: 'pointer', width: '18px', height: '18px' }}
+                  />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{
+                      textDecoration: goal.completed ? 'line-through' : 'none',
+                      fontWeight: '600',
+                      wordBreak: 'break-word'
+                    }}>
+                      {goal.title}
+                    </div>
+                    {goal.deadline && (
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-light)', marginTop: '0.25rem' }}>
+                        Scadenza: {new Date(goal.deadline).toLocaleDateString('it-IT')}
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => deleteGoal(goal.id)}
+                    style={{
+                      padding: '0.25rem 0.5rem',
+                      background: 'var(--danger)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '0.25rem',
+                      cursor: 'pointer',
+                      fontSize: '0.75rem'
+                    }}
+                  >
+                    Rimuovi
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ color: 'var(--text-light)', fontSize: '0.875rem', textAlign: 'center', padding: '1rem' }}>
+              Nessun obiettivo. Aggiungine uno!
+            </div>
+          )}
         </div>
       </div>
     </>

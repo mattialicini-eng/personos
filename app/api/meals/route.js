@@ -14,6 +14,7 @@ export async function GET(request) {
   const meals = [
     { type: 'colazione', label: '🌅 Colazione' },
     { type: 'pranzo', label: '☀️ Pranzo' },
+    { type: 'spuntini', label: '🍎 Spuntini' },
     { type: 'cena', label: '🌙 Cena' }
   ]
 
