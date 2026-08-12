@@ -7,6 +7,7 @@ import HomeTab from './tabs/HomeTab'
 import CrmTab from './tabs/CrmTab'
 import FinanceTab from './tabs/FinanceTab'
 import ReviewTab from './tabs/ReviewTab'
+import MemoryTab from './tabs/MemoryTab'
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('home')
@@ -16,7 +17,8 @@ export default function Dashboard() {
     { id: 'home', label: 'Home' },
     { id: 'crm', label: 'CRM' },
     { id: 'finance', label: 'Finanze' },
-    { id: 'review', label: 'Review' }
+    { id: 'review', label: 'Review' },
+    { id: 'memory', label: 'Memoria' }
   ]
 
   return (
@@ -52,6 +54,7 @@ export default function Dashboard() {
           {activeTab === 'crm' && <CrmTab data={data} />}
           {activeTab === 'finance' && <FinanceTab data={data} />}
           {activeTab === 'review' && <ReviewTab data={data} />}
+          {activeTab === 'memory' && <MemoryTab data={data} />}
         </div>
       )}
     </div>
