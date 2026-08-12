@@ -58,7 +58,7 @@ export default function Header() {
             borderRadius: '4px',
             boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
             zIndex: 1000,
-            minWidth: '120px',
+            minWidth: '140px',
           }}>
             <button
               onClick={() => handleExport('json')}
@@ -71,6 +71,7 @@ export default function Header() {
                 border: 'none',
                 cursor: 'pointer',
                 fontSize: '0.875rem',
+                borderBottom: '1px solid #eee',
               }}
             >
               📥 Export JSON
@@ -86,9 +87,25 @@ export default function Header() {
                 border: 'none',
                 cursor: 'pointer',
                 fontSize: '0.875rem',
+                borderBottom: '1px solid #eee',
               }}
             >
               📥 Export CSV
+            </button>
+            <button
+              onClick={() => window.location.href = '/api/auth/microsoft/start'}
+              style={{
+                display: 'block',
+                width: '100%',
+                padding: '8px',
+                textAlign: 'left',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+              }}
+            >
+              📅 Connect Calendar
             </button>
           </div>
         )}
