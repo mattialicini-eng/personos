@@ -1,4 +1,26 @@
+import { useEffect, useState } from 'react'
+
 export default function HomeTab({ data }) {
+  const [finances, setFinances] = useState(null)
+
+  useEffect(() => {
+    fetch('/data/finances.csv')
+      .then(r => r.text())
+      .then(csv => {
+        const lines = csv.trim().split('\n')
+        const latest = lines[lines.length - 1].split(';')
+        const totals = lines.find(l => l.startsWith('Totale;'))?.split(';') || []
+
+        setFinances({
+          month: latest[0],
+          expenses: latest[1],
+          revenue: latest[2],
+          balance: totals[3] || '€0'
+        })
+      })
+      .catch(err => console.error('Finance load error:', err))
+  }, [])
+
   if (!data?.profile) {
     return <div>No data</div>
   }
@@ -67,27 +89,25 @@ export default function HomeTab({ data }) {
       </div>
 
       <div className="card">
-        <h2>⚠️ Bloccato</h2>
-        <div className="stat">
-          <span>Approvazione budget</span>
-          <span style={{ color: 'var(--warning)' }}>3gg</span>
-        </div>
-        <div className="stat">
-          <span>Richiesta info cliente</span>
-          <span style={{ color: 'var(--danger)' }}>8gg</span>
-        </div>
-      </div>
-
-      <div className="card">
         <h2>💰 Polso Finanziario</h2>
-        <div className="stat">
-          <span>Saldo disponibile</span>
-          <span className="stat-value">€45.200</span>
-        </div>
-        <div className="stat">
-          <span>Spese questo mese</span>
-          <span style={{ color: 'var(--danger)' }}>€8.340</span>
-        </div>
+        {finances ? (
+          <>
+            <div className="stat">
+              <span>Saldo disponibile</span>
+              <span className="stat-value">{finances.balance}</span>
+            </div>
+            <div className="stat">
+              <span>Spese {finances.month}</span>
+              <span style={{ color: 'var(--danger)' }}>{finances.expenses}</span>
+            </div>
+            <div className="stat">
+              <span>Introiti {finances.month}</span>
+              <span style={{ color: 'var(--success)' }}>{finances.revenue}</span>
+            </div>
+          </>
+        ) : (
+          <div style={{ color: 'var(--text-light)', fontSize: '0.875rem' }}>Caricamento...</div>
+        )}
       </div>
 
       <div className="card">
