@@ -35,7 +35,7 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const { title, source } = await request.json()
+    const { title, source, category } = await request.json()
 
     if (!title) {
       return NextResponse.json(
@@ -50,7 +50,8 @@ export async function POST(request) {
         user_id: userId,
         title,
         status: 'pending',
-        source: source || 'dashboard'
+        source: source || 'dashboard',
+        category: category || 'Sikuro'
       })
       .select()
       .single()
