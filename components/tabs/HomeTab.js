@@ -10,11 +10,14 @@ export default function HomeTab({ data }) {
   const [newGoalDeadline, setNewGoalDeadline] = useState('')
   const [selectedDay, setSelectedDay] = useState('oggi')
   const [allMeals, setAllMeals] = useState({})
+  const [selectedFitnessDay, setSelectedFitnessDay] = useState(0)
 
   useEffect(() => {
-    loadMeals('oggi')
-    loadFitness()
-    loadGoals()
+    if (typeof window !== 'undefined') {
+      loadMeals('oggi')
+      loadFitness()
+      loadGoals()
+    }
   }, [])
 
   const changeDay = (day) => {
@@ -60,7 +63,7 @@ export default function HomeTab({ data }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ mealType, status })
       })
-      loadMeals()
+      loadMeals(selectedDay)
     } catch (err) {
       console.error('Save meal error:', err)
     }
@@ -304,8 +307,33 @@ export default function HomeTab({ data }) {
 
       <div className="card">
         <h2>📊 Fitness</h2>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
-          {weekDays.map(day => (
+        {weekDays.length > 0 && (
+          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', marginBottom: '1rem' }}>
+            {weekDays.map((day, idx) => (
+              <button
+                key={day.date}
+                onClick={() => setSelectedFitnessDay(idx)}
+                style={{
+                  padding: '0.5rem 1rem',
+                  background: selectedFitnessDay === idx ? 'var(--primary)' : 'var(--bg-light)',
+                  color: selectedFitnessDay === idx ? 'white' : 'inherit',
+                  border: 'none',
+                  borderRadius: '0.25rem',
+                  cursor: 'pointer',
+                  fontSize: '0.85rem',
+                  fontWeight: '600'
+                }}
+              >
+                {day.dayName} {day.dayNum}
+              </button>
+            ))}
+          </div>
+        )}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.5rem' }}>
+          {weekDays.length > 0 && weekDays[selectedFitnessDay] && (
+            (() => {
+              const day = weekDays[selectedFitnessDay]
+              return (
             <div key={day.date} style={{
               padding: '0.75rem',
               background: 'var(--bg-light)',
