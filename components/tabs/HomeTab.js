@@ -8,20 +8,32 @@ export default function HomeTab({ data }) {
   const [goals, setGoals] = useState([])
   const [newGoal, setNewGoal] = useState('')
   const [newGoalDeadline, setNewGoalDeadline] = useState('')
+  const [selectedDay, setSelectedDay] = useState('oggi')
+  const [allMeals, setAllMeals] = useState({})
 
   useEffect(() => {
-    loadMeals()
+    loadMeals('oggi')
     loadFitness()
     loadGoals()
   }, [])
 
-  const loadMeals = async () => {
+  const changeDay = (day) => {
+    setSelectedDay(day)
+    loadMeals(day)
+  }
+
+  const loadMeals = async (day = 'oggi') => {
     try {
-      const res = await fetch('/api/meals')
+      const today = new Date().toISOString().split('T')[0]
+      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      const queryDate = day === 'oggi' ? today : yesterday
+
+      const res = await fetch(`/api/meals?date=${queryDate}`)
       const result = await res.json()
       if (result.ok) {
         setMeals(result.meals)
         setSummary(result.monthlySummary)
+        setAllMeals(prev => ({ ...prev, [day]: result.meals }))
       }
     } catch (err) {
       console.error('Load meals error:', err)
@@ -71,28 +83,58 @@ export default function HomeTab({ data }) {
     try {
       const res = await fetch('/api/goals')
       const result = await res.json()
-      if (result.ok) {
+      if (result.ok && result.goals?.length > 0) {
         setGoals(result.goals)
+      } else {
+        // Fallback to localStorage
+        const stored = localStorage.getItem('goals')
+        if (stored) {
+          setGoals(JSON.parse(stored))
+        } else {
+          setGoals([])
+        }
       }
     } catch (err) {
       console.error('Load goals error:', err)
+      // Fallback to localStorage
+      const stored = localStorage.getItem('goals')
+      if (stored) {
+        setGoals(JSON.parse(stored))
+      }
     }
   }
 
   const addGoal = async () => {
     if (!newGoal.trim()) return
+
+    const newGoalObj = {
+      id: Date.now(),
+      title: newGoal,
+      deadline: newGoalDeadline || null,
+      completed: false,
+      created_at: new Date().toISOString()
+    }
+
     try {
-      await fetch('/api/goals', {
+      const res = await fetch('/api/goals', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: newGoal, deadline: newGoalDeadline || null })
       })
-      setNewGoal('')
-      setNewGoalDeadline('')
-      loadGoals()
+      const result = await res.json()
+      if (!result.ok) throw new Error('API failed')
     } catch (err) {
-      console.error('Add goal error:', err)
+      console.warn('Goals DB unavailable, using localStorage')
+      // Save to localStorage
+      const stored = localStorage.getItem('goals')
+      const storedGoals = stored ? JSON.parse(stored) : []
+      storedGoals.push(newGoalObj)
+      localStorage.setItem('goals', JSON.stringify(storedGoals))
     }
+
+    setNewGoal('')
+    setNewGoalDeadline('')
+    loadGoals()
   }
 
   const toggleGoal = async (goal) => {
@@ -102,19 +144,27 @@ export default function HomeTab({ data }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: goal.id, completed: !goal.completed, title: goal.title, deadline: goal.deadline })
       })
-      loadGoals()
     } catch (err) {
-      console.error('Update goal error:', err)
+      console.warn('Goals DB unavailable, using localStorage')
+      const stored = localStorage.getItem('goals')
+      const storedGoals = stored ? JSON.parse(stored) : []
+      const updated = storedGoals.map(g => g.id === goal.id ? { ...g, completed: !g.completed } : g)
+      localStorage.setItem('goals', JSON.stringify(updated))
     }
+    loadGoals()
   }
 
   const deleteGoal = async (goalId) => {
     try {
       await fetch(`/api/goals?id=${goalId}`, { method: 'DELETE' })
-      loadGoals()
     } catch (err) {
-      console.error('Delete goal error:', err)
+      console.warn('Goals DB unavailable, using localStorage')
+      const stored = localStorage.getItem('goals')
+      const storedGoals = stored ? JSON.parse(stored) : []
+      const filtered = storedGoals.filter(g => g.id !== goalId)
+      localStorage.setItem('goals', JSON.stringify(filtered))
     }
+    loadGoals()
   }
 
   if (!data?.profile) {
@@ -162,7 +212,39 @@ export default function HomeTab({ data }) {
 
       <div className="card">
         <h2>🍽️ Nutrizione</h2>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', marginBottom: '1rem' }}>
+          <button
+            onClick={() => changeDay('ieri')}
+            style={{
+              padding: '0.5rem 1rem',
+              background: selectedDay === 'ieri' ? 'var(--primary)' : 'var(--bg-light)',
+              color: selectedDay === 'ieri' ? 'white' : 'inherit',
+              border: 'none',
+              borderRadius: '0.25rem',
+              cursor: 'pointer',
+              fontSize: '0.85rem',
+              fontWeight: '600'
+            }}
+          >
+            Ieri
+          </button>
+          <button
+            onClick={() => changeDay('oggi')}
+            style={{
+              padding: '0.5rem 1rem',
+              background: selectedDay === 'oggi' ? 'var(--primary)' : 'var(--bg-light)',
+              color: selectedDay === 'oggi' ? 'white' : 'inherit',
+              border: 'none',
+              borderRadius: '0.25rem',
+              cursor: 'pointer',
+              fontSize: '0.85rem',
+              fontWeight: '600'
+            }}
+          >
+            Oggi
+          </button>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.5rem' }}>
           {meals.map(meal => (
             <div key={meal.type} style={{
               padding: '0.75rem',

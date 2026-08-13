@@ -9,24 +9,24 @@ const supabase = createClient(
 export async function GET(request) {
   const userId = process.env.USER_ID || 'default-user'
   const today = new Date().toISOString().split('T')[0]
-  const weekStart = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  const threeDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
 
   try {
-    // This week's activities
+    // Last 3 days activities
     const { data: weekData, error: weekError } = await supabase
       .from('activities')
       .select('*')
       .eq('user_id', userId)
-      .gte('date', weekStart)
+      .gte('date', threeDaysAgo)
       .lte('date', today)
       .order('date', { ascending: false })
 
     if (weekError) throw weekError
 
-    // Generate week days
+    // Generate last 3 days
     const weekDays = []
-    for (let i = 6; i >= 0; i--) {
+    for (let i = 2; i >= 0; i--) {
       const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000)
       const dateStr = d.toISOString().split('T')[0]
       const dayName = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'][d.getDay()]

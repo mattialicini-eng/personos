@@ -8,23 +8,31 @@ const supabase = createClient(
 
 export async function GET(request) {
   const userId = process.env.USER_ID || 'default-user'
+  const { searchParams } = new URL(request.url)
+  const dateParam = searchParams.get('date')
+
   const today = new Date().toISOString().split('T')[0]
+  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+
+  const queryDate = dateParam || today
 
   const meals = [
     { type: 'colazione', label: '🌅 Colazione' },
     { type: 'pranzo', label: '☀️ Pranzo' },
     { type: 'spuntini', label: '🍎 Spuntini' },
-    { type: 'cena', label: '🌙 Cena' }
+    { type: 'cena', label: '🌙 Cena' },
+    { type: 'vitamine', label: '💊 Vitamine' },
+    { type: 'creatina', label: '⚡ Creatina' }
   ]
 
   try {
-    // Today's meals
+    // Query date meals
     const { data: todayData, error: todayError } = await supabase
       .from('meals')
       .select('*')
       .eq('user_id', userId)
-      .eq('date', today)
+      .eq('date', queryDate)
       .order('meal_type', { ascending: true })
 
     if (todayError) throw todayError
